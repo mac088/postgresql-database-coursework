@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Немич</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body style="background-color: #D8BFD8; display: inline-flex; flex-direction: row-reverse;">
+<div class = 'UI' style="border: 1px solid black;">
+	<div class="container_show" style="border: 1px solid black; margin: 5px; padding: 5px">
+	<h3>Просмотр таблицы</h3>
+	<select class="selected_table">
+		<option disabled selected>Таблица</option>
+		<option label ="Ingredients" value="Ingredients"></option>
+		<option label ="Recipes" value="Recipes"></option>
+		<option label ="Steps" value="Steps"></option>
+		<option label ="Technologies" value="Technologies"></option>
+	</select>
+	<button class="all_data">Отобразить данные из таблицы</button>
+</div>
+
+<div class = "container_insert" style="border: 1px solid black; margin: 5px; padding: 5px">
+	<h3>Добавление строки в таблицу</h3>
+	<select id="selected_table_to_insert">
+		<option disabled selected>Таблица</option>
+		<option label ="Ingredients" value="Ingredients"></option>
+		<option label ="Recipes" value="Recipes"></option>
+		<option label ="Steps" value="Steps"></option>
+		<option label ="Technologies" value="Technologies"></option>
+	</select>
+	<span class ='insert_fields'></span>
+	<button class="insert_row_button">Добавить строку</button>
+</div>
+
+
+<div class = "container_update" style="border: 1px solid black; margin: 5px; padding: 5px">
+	<h3>Редактирование</h3>
+	<select id="selected_table_to_change">
+		<option disabled selected>Таблица</option>
+		<option label ="Ingredients" value="Ingredients"></option>
+		<option label ="Recipes" value="Recipes"></option>
+		<option label ="Steps" value="Steps"></option>
+		<option label ="Technologies" value="Technologies"></option>
+	</select>
+	<select id = "selected_field_to_change">
+		<option disabled selected>Переменная</option>
+	</select>
+	<br>
+	<br>
+	<label>ID</label>
+	<br>
+	<input type="text" class="selected_id" size="10"/>
+	<br>
+	<label>Поменять на:</label>
+	<br>
+	<input type="text" class="new_value" size="10"/>
+	<button class="change_table_value">Редактировать</button>
+</div>
+
+<div class="container_delete" style="border: 1px solid black; margin: 5px; padding: 5px">
+	<h3>Удаление</h3>
+	<select id="selected_table_to_delete">
+		<option disabled selected>Таблица</option>
+		<option label ="Ingredients" value="Ingredients"></option>
+		<option label ="Recipes" value="Recipes"></option>
+		<option label ="Steps" value="Steps"></option>
+		<option label ="Technologies" value="Technologies"></option>
+	</select>
+	<br>
+	<br>
+	<label>ID</label>
+	<br>
+	<input type="text" class="selected_id_delete" size="10"/>
+	<button class="delete_row">Удалить</button>
+</div>
+
+<div class = 'presets' style="border: 1px solid black; margin: 5px; padding: 5px;">
+	<h3>Получить все рецепты с их сложностью и временем приготовления</h3>
+	<button class='query1'>Выполнить</button>
+	<br>
+	<h3>Получить список ингредиентов и их стоимость, используемых в рецепте с наибольшей сложностью</h3>
+	<button class='query2'>Выполнить</button>
+	<br>
+	<h3>Получить количество шагов для каждого рецепта</h3>
+	<button class='query3'>Выполнить</button>
+	<br>
+	<h3>Получить список технологий, требующих навыков, для каждого шага в рецепте "Пицца"</h3>
+	<button class='query4'>Выполнить</button>
+	<br>
+	<h3>Получить среднюю стоимость ингредиентов для каждого рецепта</h3>
+	<button class='query5'>Выполнить</button>
+	<br>
+</div>
+</div>
+
+<div class="query_result" style="border: 1px solid black; margin: 5px; padding: 5px;">	
+	<h3>Результат запроса</h3>
+</div>
+
+<script type="text/javascript">
+
+	var all_queries_buttons = document.querySelectorAll('.presets button');
+	all_queries_buttons.forEach((e) => {
+		var selected_query = e.className;
+		e.addEventListener("click", () => {
+			$.ajax({
+	        type: 'POST',
+	        url: 'fetchDB.php', 
+	        data: { operation: selected_query},
+	        success: function(response){
+	        	document.querySelector(".query_result").innerHTML = "<h3>Результат запроса</h3>" + response;
+	        }
+	   		 });
+		})
+	})
+
+	var insert_button = document.querySelector(".insert_row_button");
+	insert_button.addEventListener("click", () => {
+	var selected_table = document.querySelector("#selected_table_to_insert").value;
+	var all_inserts = document.querySelectorAll('.insert_fields input');
+	insert_data = [];
+	all_inserts.forEach((element) => {
+  		insert_data.push(element.value);
+	});
+	var jsonData = JSON.stringify(insert_data);
+	console.log(jsonData);
+		$.ajax({
+	        type: 'POST',
+	        url: 'fetchDB.php', 
+	        data: { operation: "insert",
+	        		table: selected_table,
+	    			data: jsonData},
+	        success: function(response){
+	        	document.querySelector(".query_result").innerHTML = "<h3>Результат запроса</h3>" + response;
+	        }
+	    });
+	})
+
+	$('#selected_table_to_insert').change(function() {
+	  var selectedValue = $(this).val();
+
+		$('.insert_fields').empty();
+
+	  if (selectedValue === 'Ingredients') {
+	  	$('.insert_fields').append('<br>')
+	  	$('.insert_fields').append('<label>Type</label>');
+	  	 $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>');
+	    $('.insert_fields').append('<label>Cost (rub)</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Recipe used</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert size="10"/>');
+	  } else if (selectedValue === 'Technologies') {
+	  	$('.insert_fields').append('<br>')
+	  	$('.insert_fields').append('<label>Name</label>');
+	  	 $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>');
+	    $('.insert_fields').append('<label>Step</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Origin time</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Skills required</label>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	  } else if (selectedValue === 'Steps') {
+	  	$('.insert_fields').append('<br>')
+	  	$('.insert_fields').append('<label>Title</label>');
+	  	$('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>');
+	    $('.insert_fields').append('<label>Recipe used</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Descriptions</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Ingridient used</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Number of step</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	  }
+	  else if (selectedValue === 'Recipes') {
+	  	$('.insert_fields').append('<br>')
+	  	$('.insert_fields').append('<label>Title</label>');
+	  	 $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>');
+	    $('.insert_fields').append('<label>Difficulty</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	    $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<label>Minutes to cook</label>');
+	     $('.insert_fields').append('<br>')
+	    $('.insert_fields').append('<input type="text" class="insert" size="10"/>');
+	  }
+	});
+
+	var delete_row_button = document.querySelector(".delete_row");
+	delete_row_button.addEventListener("click", () =>
+	{
+		var selected_table = document.querySelector("#selected_table_to_delete").value;
+		var selected_id = document.querySelector(".selected_id_delete").value;
+		$.ajax({
+	        type: 'POST',
+	        url: 'fetchDB.php', 
+	        data: { operation: "delete",
+	        		table: selected_table,
+	    			id: selected_id},
+	        success: function(response){
+	        	document.querySelector(".query_result").innerHTML = "<h3>Результат запроса</h3>" + response;
+	        }
+	    });
+	})
+
+	var change_value_button = document.querySelector(".change_table_value");
+	change_value_button.addEventListener("click", () => {
+		var selected_table = document.querySelector(".selected_table").value;
+		var selected_field = document.querySelector("#selected_field_to_change").value;
+		var new_value = document.querySelector(".new_value").value;
+		var selected_id = document.querySelector(".selected_id").value;
+		$.ajax({
+	        type: 'POST',
+	        url: 'fetchDB.php', 
+	        data: { operation: "change",
+	        		table: selected_table,
+	    			field: selected_field,
+	    			value: new_value,
+	    			id: selected_id},
+	        success: function(response){
+	        	document.querySelector(".query_result").innerHTML = "<h3>Результат запроса</h3>" + response;
+	        }
+	    });
+	});
+
+
+	$('#selected_table_to_change').change(function() {
+	  var selectedValue = $(this).val();
+	  
+	  $('#selected_field_to_change').empty();
+	  
+	  if (selectedValue === 'Ingredients') {
+	    $('#selected_field_to_change').append('<option value="type">Type</option>');
+	    $('#selected_field_to_change').append('<option value="cost_rub">Cost (rub)</option>');
+	    $('#selected_field_to_change').append('<option value="recipe_used">Recipe used</option>');
+	  } else if (selectedValue === 'Recipes') {
+	    $('#selected_field_to_change').append('<option value="title">Title</option>');
+	    $('#selected_field_to_change').append('<option value="difficulty">Difficulty</option>');
+	    $('#selected_field_to_change').append('<option value="minutes_to_cook">Minutes to cook</option>');
+	  } else if (selectedValue === 'Technologies') {
+	    $('#selected_field_to_change').append('<option value="name">Name</option>');
+	    $('#selected_field_to_change').append('<option value="step">Step</option>');
+	    $('#selected_field_to_change').append('<option value="origin">Origin</option>');
+	    $('#selected_field_to_change').append('<option value="skills_required">Skills required</option>');
+	  }
+	  else if (selectedValue === 'Steps') {
+	   $('#selected_field_to_change').append('<option value="title">Title</option>');
+	   $('#selected_field_to_change').append('<option value="recipe_used">Recipe used</option>');
+	   $('#selected_field_to_change').append('<option value="description">Description</option>');
+	   $('#selected_field_to_change').append('<option value="ingiridient_used">Ingridient used</option>');
+	   $('#selected_field_to_change').append('<option value="number_of_step">Number of step</option>');
+	  }
+	});
+
+
+	var all_data_button = document.querySelector(".all_data");
+	all_data_button.addEventListener("click", () => {
+		var selected_table = document.querySelector(".selected_table").value;
+		$.ajax({
+	        type: 'POST',
+	        url: 'fetchDB.php', 
+	        data: { operation: "show",
+	        		table: selected_table},
+	        success: function(response){
+	        	document.querySelector(".query_result").innerHTML = "<h3>Результат запроса</h3>" + response;
+	        }
+	    });
+	});
+</script>
+</body>
+</html>
